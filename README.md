@@ -27,7 +27,7 @@ A minimalist online banking interface that allows users to manage their finances
   - Date formatting for better readability
 
 ## Demo Accounts
-Username: jd PIN: 1111 // John Welguin
+Username: jw PIN: 1111 // John Welguin
 Username: jd PIN: 2222 // Jessica Davis
 
 ## Technical Details
