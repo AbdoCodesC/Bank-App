@@ -116,8 +116,9 @@ const openModal = () => {
 const closeModal = () => {
   modal.classList.add('hidden');
   overlay.classList.add('hidden');
-  // Clear form without logging in
-  signupName.value = signupUsername.value = signupPin.value = '';
+
+  if (signupName) signupName.value = '';
+  if (signupPin) signupPin.value = '';
 };
 
 const createUserNames = accounts => {
@@ -164,6 +165,7 @@ const displayBalance = account => {
   // calculating the balance
   account.balance = account.movements.reduce((acc, mov) => acc + mov, 0);
   labelBalance.textContent = `${account.balance.toFixed(2)} USD`;
+  labelBalance.style.color = account.balance > 0 ? '#333' : 'red';
 };
 
 const calcDisplaySummary = account => {
@@ -235,6 +237,37 @@ const getCreditRating = (score) => {
   return { rating: 'BAD', multiplier: CREDIT_SCORE_RANGES.BAD.loanMultiplier };
 };
 
+const startLogoutTimer = () => {
+  let time = 300; // 5 minutes in seconds
+  
+  const tick = () => {
+      const minutes = String(Math.floor(time / 60)).padStart(2, '0');
+      const seconds = String(time % 60).padStart(2, '0');
+      
+      // Display time in UI
+      labelTimer.textContent = `${minutes}:${seconds}`;
+      
+      // When time is up, log out user
+      if (time === 0) {
+          clearInterval(timer);
+          containerApp.style.opacity = '0';
+          labelWelcome.textContent = 'Log in to get started';
+          btnLogin.innerHTML = '&rarr;';
+          btnLogin.classList.remove('logout__btn');
+          btnLogin.classList.add('login__btn');
+          inputLoginUsername.disabled = false;
+          inputLoginPin.disabled = false;
+      }
+      
+      time--;
+  };
+  // Call immediately and then every second
+  tick();
+  const timer = setInterval(tick, 1000);
+  
+  return timer;
+};
+
 btnLogin.addEventListener('click', e => {
   e.preventDefault();
 
@@ -274,12 +307,10 @@ btnLogin.addEventListener('click', e => {
       btnLogin.classList.remove('login__btn');
       inputLoginUsername.disabled = true;
       inputLoginPin.disabled = true;
-      // let y = 10
-      // const timer = setInterval(() => {
-      //   labelTimer.textContent = y--
-      //   console.log(y)
-      // }, 1000)
-      // if (y === 0) clearInterval(timer)
+       // Clear existing timer if any
+       if (window.timer) clearInterval(window.timer);
+       // Start new timer
+       window.timer = startLogoutTimer();
     } else {
       btnLogin.style.color = 'red';
       setTimeout(() => {
@@ -288,6 +319,19 @@ btnLogin.addEventListener('click', e => {
       });
     }
   }
+});
+
+// Reset timer on any activity
+const resetTimer = () => {
+  if (window.timer) {
+      clearInterval(window.timer);
+      window.timer = startLogoutTimer();
+  }
+};
+
+// Add these event listeners for user activity
+['click', 'keypress', 'change', 'submit'].forEach(event => {
+  document.addEventListener(event, resetTimer);
 });
 
 btnTransfer.addEventListener('click', e => {
@@ -383,7 +427,29 @@ btnClose.addEventListener('click', e => {
 });
 
 let loanAmount = 100_000_000;
-let decision = false;
+
+const showLoanError = (message) => {
+  btnLoan.style.color = 'red';
+  // Store the original input type
+  const originalType = inputLoanAmount.type;
+  
+  // Temporarily change to text to show error
+  inputLoanAmount.style.transition = 'all 0.3s ease';
+  inputLoanAmount.type = 'text';
+  inputLoanAmount.value = message;
+  inputLoanAmount.style.color = 'red';
+  inputLoanAmount.style.width = '17rem';
+  
+  // Reset after delay
+  setTimeout(() => {
+    inputLoanAmount.style.transition = 'all 0.3s ease';
+    btnLoan.style.color = 'black';
+    inputLoanAmount.type = originalType;
+    inputLoanAmount.value = '';
+    inputLoanAmount.style.color = 'black';
+    inputLoanAmount.style.width = '12rem';
+  }, 2000);
+};
 
 // Update loan button logic
 btnLoan.addEventListener('click', e => {
@@ -394,32 +460,41 @@ btnLoan.addEventListener('click', e => {
           labelWelcome.textContent.split(',')[1].toLowerCase().trim()
   );
 
-  const amount = +inputLoanAmount.value;
+  const amount = Math.floor(+inputLoanAmount.value);
   const { multiplier, rating } = getCreditRating(currentAccount.creditScore);
-  const maxLoanAmount = currentAccount.balance * multiplier;
+  
+  // Calculate max loan based on positive balance only
+  const maxLoanAmount = Math.max(currentAccount.balance, 0) * multiplier;
 
+  // Validation checks with shorter messages
   if (!currentAccount || !amount || amount <= 0) {
-      showLoanError('Invalid loan amount');
+      showLoanError('Enter valid amount');
       return;
   }
 
   if (rating === 'BAD') {
-      showLoanError('Loan denied: Credit score too low');
+      showLoanError('Credit score too low');
+      return;
+  }
+
+  // If balance is negative or zero, deny loan
+  if (currentAccount.balance <= 0) {
+      showLoanError('Balance must be positive');
       return;
   }
 
   if (amount > maxLoanAmount) {
-      showLoanError(`Loan denied: Maximum loan amount for your credit score (${currentAccount.creditScore}) is $${maxLoanAmount.toFixed(2)}`);
+      showLoanError(`Max loan: $${maxLoanAmount}`);
       return;
   }
 
   if (loanAmount <= 0) {
-      showLoanError('No more loans available from the bank');
+      showLoanError('No loans available');
       return;
   }
 
   if (amount > loanAmount) {
-      showLoanError('Loan amount exceeds bank\'s available funds');
+      showLoanError(`Max available: $${loanAmount}`);
       return;
   }
 
@@ -433,16 +508,25 @@ btnLoan.addEventListener('click', e => {
   updateUI(currentAccount);
   inputLoanAmount.value = '';
   
-  // Show success message
-  alert(`Loan approved!\nCredit Score: ${currentAccount.creditScore}\nRating: ${rating}`);
+  // Show success in input
+  showLoanSuccess(`Loan approved: $${amount}`);
 });
 
-// Helper function to show loan errors
-const showLoanError = (message) => {
-  alert(message);
-  btnLoan.style.color = 'red';
-  setTimeout(() => (btnLoan.style.color = 'black'), 400);
-  inputLoanAmount.value = '';
+// Add a success message handler
+const showLoanSuccess = (message) => {
+  btnLoan.style.color = 'green';
+  const originalType = inputLoanAmount.type;
+  
+  inputLoanAmount.type = 'text';
+  inputLoanAmount.value = message;
+  inputLoanAmount.style.color = 'green';
+  
+  setTimeout(() => {
+      btnLoan.style.color = 'black';
+      inputLoanAmount.type = originalType;
+      inputLoanAmount.value = '';
+      inputLoanAmount.style.color = 'black';
+  }, 2000);
 };
 
 btnSort.addEventListener('click', e => {
@@ -484,7 +568,11 @@ const handleSignupSuccess = newAccount => {
 signupForm.addEventListener('submit', e => {
   e.preventDefault();
 
-  const fullName = signupName.value;
+  const fullName = signupName.value
+  .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
   const pin = signupPin.value;
 
   // Validate PIN is 4 digits
@@ -501,7 +589,7 @@ signupForm.addEventListener('submit', e => {
       .join('');
 
   // Check if username already exists
-  if (accounts.some(acc => acc.username === username)) {
+  if (accounts.some(acc => acc.username === username && acc.owner === fullName && acc.pin === +pin)) {
       alert('An account with similar initials already exists. Please use a different name.');
       return;
   }
@@ -547,4 +635,3 @@ document.addEventListener('keydown', e => {
     closeModal();
   }
 });
-
