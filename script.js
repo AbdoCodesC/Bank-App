@@ -1,6 +1,6 @@
 'use strict';
-// Data
 
+// Demo accounts
 const account1 = {
   owner: 'John Welguin',
   movements: [200, 455.23, -306.5, 25000, -642.21, -133.9, 79.97, 1300],
@@ -18,7 +18,8 @@ const account1 = {
     '2024-11-05T05:51:36.790-05:00',
   ],
   currency: 'EUR',
-  locale: 'pt-PT', // de-DE
+  creditScore: 800,
+  locale: 'pt-PT',
 };
 
 const account2 = {
@@ -36,6 +37,7 @@ const account2 = {
     '2024-06-25T13:49:59.371-05:00',
     '2024-07-26T07:01:20.894-05:00',
   ],
+  creditScore: 700,
   currency: 'USD',
   locale: 'en-US',
 };
@@ -77,6 +79,34 @@ const signupName = document.querySelector('.signup-name');
 const signupUsername = document.querySelector('.signup-username');
 const signupPin = document.querySelector('.signup-pin');
 const closeModalBtn = document.querySelector('.close-modal');
+
+const generateRandomMovements = () => {
+  const numTransactions = Math.floor(Math.random() * 5) + 3; // 3-7 transactions
+  const movements = [];
+  const dates = [];
+  
+  // Generate random dates within the last 3 months
+  const now = new Date();
+  const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+  
+  for (let i = 0; i < numTransactions; i++) {
+      // Random amount between -3000 and 5000
+      const amount = Math.floor(Math.random() * 8000) - 3000;
+      movements.push(amount);
+      
+      // Random date between now and 3 months ago
+      const randomDate = new Date(
+          threeMonthsAgo.getTime() + Math.random() * (now.getTime() - threeMonthsAgo.getTime())
+      );
+      dates.push(randomDate.toISOString());
+  }
+  
+  // Add initial deposit
+  movements.push(1000);
+  dates.push(new Date().toISOString());
+  
+  return { movements, dates };
+};
 
 const openModal = () => {
   modal.classList.remove('hidden');
@@ -161,24 +191,50 @@ const updateUI = currentAccount => {
   displayMovements(currentAccount);
 };
 
-const formatMovementDate = function (date, locale) {
+const formatMovementDate = function (date) {
+  // Ensure date is a Date object
+  const dateObj = new Date(date);
+  
   const calcDaysPassed = (date1, date2) =>
-    Math.abs(Math.round((date2 - date1) / (1000 * 60 * 60 * 24)));
+      Math.abs(Math.round((date2 - date1) / (1000 * 60 * 60 * 24)));
 
-  const daysPassed = calcDaysPassed(date, new Date().toISOString());
+  const daysPassed = calcDaysPassed(dateObj, new Date());
 
-  const day = `${date.getDate()}`.padStart(2, '0');
-  const month = `${date.getMonth() + 1}`.padStart(2, '0');
-  const year = date.getFullYear();
+  const day = `${dateObj.getDate()}`.padStart(2, '0');
+  const month = `${dateObj.getMonth() + 1}`.padStart(2, '0');
+  const year = dateObj.getFullYear();
 
   return daysPassed === 0
-    ? 'Today'
-    : daysPassed === 1
-    ? 'Yesterday'
-    : daysPassed <= 7
-    ? `${daysPassed} days ago`
-    : `${month}/${day}/${year}`;
+      ? 'Today'
+      : daysPassed === 1
+      ? 'Yesterday'
+      : daysPassed <= 7
+      ? `${daysPassed} days ago`
+      : `${month}/${day}/${year}`;
 };
+
+const CREDIT_SCORE_RANGES = {
+  EXCELLENT: { min: 750, max: 800, loanMultiplier: 5 },
+  GOOD: { min: 700, max: 749, loanMultiplier: 4 },
+  FAIR: { min: 650, max: 699, loanMultiplier: 3 },
+  POOR: { min: 550, max: 649, loanMultiplier: 2 },
+  BAD: { min: 300, max: 549, loanMultiplier: 0 }
+};
+
+// Generate random credit score
+const generateCreditScore = () => {
+  return Math.floor(Math.random() * (800 - 300 + 1)) + 300;
+};
+
+// Function to get credit rating and loan multiplier
+const getCreditRating = (score) => {
+  if (score >= CREDIT_SCORE_RANGES.EXCELLENT.min) return { rating: 'EXCELLENT', multiplier: CREDIT_SCORE_RANGES.EXCELLENT.loanMultiplier };
+  if (score >= CREDIT_SCORE_RANGES.GOOD.min) return { rating: 'GOOD', multiplier: CREDIT_SCORE_RANGES.GOOD.loanMultiplier };
+  if (score >= CREDIT_SCORE_RANGES.FAIR.min) return { rating: 'FAIR', multiplier: CREDIT_SCORE_RANGES.FAIR.loanMultiplier };
+  if (score >= CREDIT_SCORE_RANGES.POOR.min) return { rating: 'POOR', multiplier: CREDIT_SCORE_RANGES.POOR.loanMultiplier };
+  return { rating: 'BAD', multiplier: CREDIT_SCORE_RANGES.BAD.loanMultiplier };
+};
+
 btnLogin.addEventListener('click', e => {
   e.preventDefault();
 
@@ -237,101 +293,157 @@ btnLogin.addEventListener('click', e => {
 btnTransfer.addEventListener('click', e => {
   e.preventDefault();
   const currentAccount = accounts.find(
-    acct =>
-      acct.owner.split(' ')[0].toLowerCase().trim() ===
-      labelWelcome.textContent.split(',')[1].toLowerCase().trim()
+      acct =>
+          acct.owner.split(' ')[0].toLowerCase().trim() ===
+          labelWelcome.textContent.split(',')[1].toLowerCase().trim()
   );
   const accountReceiver = accounts.find(
-    acct => acct.username === inputTransferTo.value
+      acct => acct.username === inputTransferTo.value
   );
   let amount = +inputTransferAmount.value;
+  
   if (
-    amount > 0 &&
-    accountReceiver &&
-    amount < currentAccount.balance &&
-    currentAccount.username !== accountReceiver.username
+      amount > 0 &&
+      accountReceiver &&
+      amount < currentAccount.balance &&
+      currentAccount.username !== accountReceiver.username
   ) {
-    // transfer
-    console.log(
-      'iso ',
-      new Date().toISOString().getDate() + 1 - new Date().toISOString()
-    );
-    const displayDate = formatMovementDate(new Date().toISOString());
-    currentAccount.movementsDates.push(displayDate);
-    accountReceiver.movementsDates.push(displayDate);
-    currentAccount.movements.push(-amount);
-    accountReceiver.movements.push(amount);
-    // update UI
-    updateUI(currentAccount);
-    // empty the area
-    inputTransferTo.value = '';
-    inputTransferAmount.value = '';
+      // Add new date as ISO string
+      const now = new Date().toISOString();
+      
+      // Add movements and dates
+      currentAccount.movementsDates.push(now);
+      accountReceiver.movementsDates.push(now);
+      currentAccount.movements.push(-amount);
+      accountReceiver.movements.push(amount);
+      
+      // Update UI
+      updateUI(currentAccount);
+      
+      // Clear input fields
+      inputTransferTo.value = '';
+      inputTransferAmount.value = '';
   } else {
-    btnTransfer.style.color = 'red';
-    setTimeout(() => (btnTransfer.style.color = 'black'), 400);
+      btnTransfer.style.color = 'red';
+      setTimeout(() => (btnTransfer.style.color = 'black'), 400);
   }
 });
 
 btnClose.addEventListener('click', e => {
   e.preventDefault();
+  
+  // Get current account using username instead of first name
   const currentAccount = accounts.find(
-    acct =>
-      acct.owner.split(' ')[0].toLowerCase().trim() ===
-      labelWelcome.textContent.split(',')[1].toLowerCase().trim()
+      acct => acct.username === inputCloseUsername.value
   );
+
+  console.log('Attempting to close account:', {
+      inputUsername: inputCloseUsername.value,
+      inputPin: inputClosePin.value,
+      currentAccount: currentAccount
+  });
+
   if (
-    currentAccount &&
-    currentAccount.username === inputCloseUsername.value &&
-    +currentAccount.pin === +inputClosePin.value
+      currentAccount &&
+      +inputClosePin.value === currentAccount.pin
   ) {
-    const index = accounts.findIndex(
-      acc => acc.username === currentAccount.username
-    );
-    accounts.splice(index, 1);
-    inputLoginPin.value = '';
-    inputLoginUsername.value = '';
-    labelWelcome.textContent = `Login to get started`;
-    containerApp.style.opacity = '0';
-    btnLogin.innerHTML = '&rarr;';
-    btnLogin.classList.add('login__btn');
-    btnLogin.classList.remove('logout__btn');
-    inputCloseUsername.value = '';
-    inputClosePin.value = '';
-    inputLoginUsername.disabled = false;
-    inputLoginPin.disabled = false;
+      const index = accounts.findIndex(
+          acc => acc.username === currentAccount.username
+      );
+      
+      // Delete account
+      accounts.splice(index, 1);
+      
+      // Reset UI
+      containerApp.style.opacity = '0';
+      labelWelcome.textContent = 'Log in to get started';
+      
+      // Clear all inputs
+      inputCloseUsername.value = inputClosePin.value = '';
+      inputLoginUsername.value = inputLoginPin.value = '';
+      
+      // Reset login button
+      btnLogin.innerHTML = '&rarr;';
+      btnLogin.classList.remove('logout__btn');
+      btnLogin.classList.add('login__btn');
+      
+      // Enable login inputs
+      inputLoginUsername.disabled = false;
+      inputLoginPin.disabled = false;
+
+      console.log('Account closed successfully');
   } else {
-    btnClose.style.color = 'red';
-    setTimeout(() => (btnClose.style.color = 'black'), 400);
+      console.log('Invalid credentials for account closure');
+      btnClose.style.color = 'red';
+      setTimeout(() => (btnClose.style.color = 'black'), 400);
+      
+      // Clear close account inputs
+      inputCloseUsername.value = inputClosePin.value = '';
   }
 });
 
 let loanAmount = 100_000_000;
+let decision = false;
+
+// Update loan button logic
 btnLoan.addEventListener('click', e => {
   e.preventDefault();
   const currentAccount = accounts.find(
-    acct =>
-      acct.owner.split(' ')[0].toLowerCase().trim() ===
-      labelWelcome.textContent.split(',')[1].toLowerCase().trim()
+      acct =>
+          acct.owner.split(' ')[0].toLowerCase().trim() ===
+          labelWelcome.textContent.split(',')[1].toLowerCase().trim()
   );
 
-  if (
-    currentAccount &&
-    loanAmount > 0 &&
-    +inputLoanAmount.value > 0 &&
-    +inputLoanAmount.value < loanAmount
-  ) {
-    const displayDate = formatMovementDate(new Date().toISOString());
-    currentAccount.movementsDates.push(displayDate);
-    currentAccount.movements.push(+inputLoanAmount.value);
-    loanAmount -= +inputLoanAmount.value;
-    // Update UI
-    updateUI(currentAccount);
-    inputLoanAmount.value = '';
-  } else {
-    btnLoan.style.color = 'red';
-    setTimeout(() => (btnLoan.style.color = 'black'), 400);
+  const amount = +inputLoanAmount.value;
+  const { multiplier, rating } = getCreditRating(currentAccount.creditScore);
+  const maxLoanAmount = currentAccount.balance * multiplier;
+
+  if (!currentAccount || !amount || amount <= 0) {
+      showLoanError('Invalid loan amount');
+      return;
   }
+
+  if (rating === 'BAD') {
+      showLoanError('Loan denied: Credit score too low');
+      return;
+  }
+
+  if (amount > maxLoanAmount) {
+      showLoanError(`Loan denied: Maximum loan amount for your credit score (${currentAccount.creditScore}) is $${maxLoanAmount.toFixed(2)}`);
+      return;
+  }
+
+  if (loanAmount <= 0) {
+      showLoanError('No more loans available from the bank');
+      return;
+  }
+
+  if (amount > loanAmount) {
+      showLoanError('Loan amount exceeds bank\'s available funds');
+      return;
+  }
+
+  // Process approved loan
+  const now = new Date().toISOString();
+  currentAccount.movementsDates.push(now);
+  currentAccount.movements.push(amount);
+  loanAmount -= amount;
+
+  // Update UI
+  updateUI(currentAccount);
+  inputLoanAmount.value = '';
+  
+  // Show success message
+  alert(`Loan approved!\nCredit Score: ${currentAccount.creditScore}\nRating: ${rating}`);
 });
+
+// Helper function to show loan errors
+const showLoanError = (message) => {
+  alert(message);
+  btnLoan.style.color = 'red';
+  setTimeout(() => (btnLoan.style.color = 'black'), 400);
+  inputLoanAmount.value = '';
+};
 
 btnSort.addEventListener('click', e => {
   e.preventDefault();
@@ -355,47 +467,71 @@ const handleSignupSuccess = newAccount => {
   overlay.classList.add('hidden');
 
   // Clear form
-  signupName.value = signupUsername.value = signupPin.value = '';
+  signupName.value = '';
+  signupPin.value = '';
 
   // Auto-login
-  inputLoginUsername.value = newAccount.username;
-  inputLoginPin.value = newAccount.pin;
-  btnLogin.click();
+  const loginUsername = document.querySelector('.login__input--user');
+  const loginPin = document.querySelector('.login__input--pin');
+  
+  if (loginUsername && loginPin) {
+      loginUsername.value = newAccount.username;
+      loginPin.value = newAccount.pin;
+      btnLogin.click();
+  }
 };
 
 signupForm.addEventListener('submit', e => {
   e.preventDefault();
 
   const fullName = signupName.value;
-  const username = signupUsername.value;
-  const pin = +signupPin.value;
+  const pin = signupPin.value;
 
   // Validate PIN is 4 digits
-  if (pin < 1000 || pin > 9999) {
-    alert('PIN must be 4 digits');
+  if (!/^\d{4}$/.test(pin)) {
+    alert('PIN must be exactly 4 digits');
     return;
-  }
+}
+
+  // Generate username from initials
+  const username = fullName
+      .toLowerCase()
+      .split(' ')
+      .map(name => name[0])
+      .join('');
 
   // Check if username already exists
   if (accounts.some(acc => acc.username === username)) {
-    alert('Username already exists');
-    return;
+      alert('An account with similar initials already exists. Please use a different name.');
+      return;
   }
+
+  // Generate random movements and dates
+  const { movements, dates } = generateRandomMovements();
+  
+  // Generate credit score
+  const creditScore = generateCreditScore();
+  const { rating } = getCreditRating(creditScore);
 
   // Create new account
   const newAccount = {
-    owner: fullName,
-    username: username,
-    movements: [1000], // Starting balance
-    interestRate: 1.2,
-    pin: pin,
-    movementsDates: [new Date().toISOString()],
-    currency: 'USD',
-    locale: 'en-US',
+      owner: fullName,
+      username: username,
+      movements: movements,
+      interestRate: 1.2,
+      pin: +pin,
+      movementsDates: dates,
+      currency: 'USD',
+      locale: 'en-US',
+      creditScore: creditScore,
+      creditRating: rating
   };
 
   // Add to accounts array
   accounts.push(newAccount);
+
+  // Show credit score to user
+  alert(`Account created successfully!\nYour username is: ${username}\nYour credit score is: ${creditScore}\nCredit Rating: ${rating}`);
 
   // Handle successful signup
   handleSignupSuccess(newAccount);
@@ -412,14 +548,3 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
-// LECTURES
-
-// const currencies = new Map([
-//   ['USD', 'United States dollar'],
-//   ['EUR', 'Euro'],
-//   ['GBP', 'Pound sterling'],
-// ])
-
-/////////////////////////////////////////////////
