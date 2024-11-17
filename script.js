@@ -132,58 +132,45 @@ const createUserNames = accounts => {
 };
 createUserNames(accounts);
 
-const displayMovements = (account, sort) => {
-  containerMovements.innerHTML = '';
-  const sortedMovements = [...account.movements];
+let loggedInAccount;
 
-  if (sort) {
-    if (btnSort.innerHTML === '↓ SORT') {
-      sortedMovements.sort((a, b) => a - b);
-      btnSort.innerHTML = '↑ SORT';
-    } else {
-      sortedMovements.sort((a, b) => b - a);
-      btnSort.innerHTML = '↓ SORT';
-    }
-  }
-
-  sortedMovements.forEach((mov, i) => {
-    const type = mov > 0 ? 'deposit' : 'withdrawal';
-    const date = new Date(account.movementsDates[i]);
-    const displayDate = formatMovementDate(date);
-    const html = `<div class="movements__row">
-          <div class="movements__type movements__type--${type}">${
-      i + 1
-    } ${type}</div>
-          <div class="movements__date">${displayDate}</div>
-          <div class="movements__value">$${mov}</div>
-        </div>`;
-    containerMovements.insertAdjacentHTML('afterbegin', html);
-  });
+const getCurrentAccount = () => {
+  return loggedInAccount;
 };
 
 const displayBalance = account => {
-  // calculating the balance
-  account.balance = account.movements.reduce((acc, mov) => acc + mov, 0);
-  labelBalance.textContent = `${account.balance.toFixed(2)} USD`;
+  // Calculate balance with proper decimal handling
+  account.balance = account.movements.reduce((acc, mov) => {
+      // Convert to number with 2 decimal places
+      return +(acc + mov).toFixed(2);
+  }, 0);
+
+  // Display with proper formatting
+  labelBalance.textContent = `$${account.balance.toFixed(2)}`;
   labelBalance.style.color = account.balance > 0 ? '#333' : 'red';
 };
 
 const calcDisplaySummary = account => {
+  // Calculate income (deposits)
   const income = account.movements
-    .filter(mov => mov > 0)
-    .map(mov => mov * eurToUsd)
-    .reduce((acc, mov) => acc + mov, 0);
+      .filter(mov => mov > 0)
+      .reduce((acc, mov) => +(acc + mov).toFixed(2), 0);
+
+  // Calculate outcome (withdrawals)
   const outcome = account.movements
-    .filter(mov => mov < 0)
-    .map(mov => mov * eurToUsd)
-    .reduce((acc, mov) => acc + mov, 0);
+      .filter(mov => mov < 0)
+      .reduce((acc, mov) => +(acc + mov).toFixed(2), 0);
+
+  // Calculate interest
   const interest = account.movements
-    .filter(mov => mov > 0)
-    .map(deposit => deposit * (account.interestRate / 100) * eurToUsd)
-    .filter(int => int >= 1)
-    .reduce((acc, interest) => acc + interest, 0);
+      .filter(mov => mov > 0)
+      .map(deposit => +(deposit * (account.interestRate / 100)).toFixed(2))
+      .filter(int => int >= 1)
+      .reduce((acc, int) => +(acc + int).toFixed(2), 0);
+
+  // Display with proper formatting
   labelSumIn.textContent = `$${income.toFixed(2)}`;
-  labelSumOut.textContent = `$${Math.abs(outcome.toFixed(2))}`;
+  labelSumOut.textContent = `$${Math.abs(outcome).toFixed(2)}`;
   labelSumInterest.textContent = `$${interest.toFixed(2)}`;
 };
 
@@ -288,9 +275,8 @@ btnLogin.addEventListener('click', e => {
         +user.pin === +inputLoginPin.value
       );
     });
-    console.log('accountFound', accountFound);
-
     if (accountFound) {
+      loggedInAccount = accountFound;
       const day = `${new Date().getDate()}`.padStart(2, '0');
       const month = `${new Date().getMonth() + 1}`.padStart(2, '0');
       const year = new Date().getFullYear();
@@ -321,107 +307,96 @@ btnLogin.addEventListener('click', e => {
   }
 });
 
-// Reset timer on any activity
+// Reset timer on relevant activity only
 const resetTimer = () => {
-  if (window.timer) {
+  if (window.timer && containerApp.style.opacity === '1') {
       clearInterval(window.timer);
       window.timer = startLogoutTimer();
   }
 };
 
-// Add these event listeners for user activity
-['click', 'keypress', 'change', 'submit'].forEach(event => {
-  document.addEventListener(event, resetTimer);
-});
+// Only listen for relevant events on app container
+containerApp.addEventListener('click', resetTimer);
+containerApp.addEventListener('keypress', resetTimer);
+containerApp.addEventListener('input', resetTimer);
 
 btnTransfer.addEventListener('click', e => {
   e.preventDefault();
-  const currentAccount = accounts.find(
-      acct =>
-          acct.owner.split(' ')[0].toLowerCase().trim() ===
-          labelWelcome.textContent.split(',')[1].toLowerCase().trim()
-  );
+  const currentAccount = getCurrentAccount();
+
   const accountReceiver = accounts.find(
       acct => acct.username === inputTransferTo.value
   );
-  let amount = +inputTransferAmount.value;
-  
-  if (
-      amount > 0 &&
-      accountReceiver &&
-      amount < currentAccount.balance &&
-      currentAccount.username !== accountReceiver.username
-  ) {
-      // Add new date as ISO string
-      const now = new Date().toISOString();
-      
-      // Add movements and dates
-      currentAccount.movementsDates.push(now);
-      accountReceiver.movementsDates.push(now);
-      currentAccount.movements.push(-amount);
-      accountReceiver.movements.push(amount);
-      
-      // Update UI
-      updateUI(currentAccount);
-      
-      // Clear input fields
-      inputTransferTo.value = '';
-      inputTransferAmount.value = '';
-  } else {
+  let amount = +(inputTransferAmount.value);
+
+  // Validation checks
+  if (!accountReceiver || !amount || amount <= 0) {
       btnTransfer.style.color = 'red';
       setTimeout(() => (btnTransfer.style.color = 'black'), 400);
+      inputTransferTo.value = inputTransferAmount.value = '';
+      return;
   }
+
+  // Check for self-transfer
+  if (currentAccount.username === accountReceiver.username) {
+      btnTransfer.style.color = 'red';
+      setTimeout(() => (btnTransfer.style.color = 'black'), 400);
+      inputTransferTo.value = inputTransferAmount.value = '';
+      return;
+  }
+
+  // Check sufficient balance
+  if (amount > currentAccount.balance) {
+      btnTransfer.style.color = 'red';
+      setTimeout(() => (btnTransfer.style.color = 'black'), 400);
+      inputTransferTo.value = inputTransferAmount.value = '';
+      return;
+  }
+
+  // Process transfer
+  const now = new Date().toISOString();
+  currentAccount.movementsDates.push(now);
+  accountReceiver.movementsDates.push(now);
+  currentAccount.movements.push(-amount);
+  accountReceiver.movements.push(amount);
+  
+  // Update UI
+  updateUI(currentAccount);
+  inputTransferTo.value = inputTransferAmount.value = '';
 });
 
 btnClose.addEventListener('click', e => {
   e.preventDefault();
   
-  // Get current account using username instead of first name
-  const currentAccount = accounts.find(
-      acct => acct.username === inputCloseUsername.value
-  );
-
-  console.log('Attempting to close account:', {
-      inputUsername: inputCloseUsername.value,
-      inputPin: inputClosePin.value,
-      currentAccount: currentAccount
-  });
+  const currentAccount = getCurrentAccount();
+  if (!currentAccount) return;
 
   if (
-      currentAccount &&
+      inputCloseUsername.value === currentAccount.username &&
       +inputClosePin.value === currentAccount.pin
   ) {
       const index = accounts.findIndex(
           acc => acc.username === currentAccount.username
       );
       
-      // Delete account
+      // Delete account and cleanup
       accounts.splice(index, 1);
-      
-      // Reset UI
       containerApp.style.opacity = '0';
       labelWelcome.textContent = 'Log in to get started';
+      if (window.timer) clearInterval(window.timer);
       
-      // Clear all inputs
-      inputCloseUsername.value = inputClosePin.value = '';
-      inputLoginUsername.value = inputLoginPin.value = '';
+      // Reset all inputs and states
+      [inputCloseUsername, inputClosePin, inputLoginUsername, inputLoginPin]
+          .forEach(input => input.value = '');
       
-      // Reset login button
       btnLogin.innerHTML = '&rarr;';
       btnLogin.classList.remove('logout__btn');
       btnLogin.classList.add('login__btn');
-      
-      // Enable login inputs
       inputLoginUsername.disabled = false;
       inputLoginPin.disabled = false;
-
-      console.log('Account closed successfully');
   } else {
-      console.log('Invalid credentials for account closure');
       btnClose.style.color = 'red';
       setTimeout(() => (btnClose.style.color = 'black'), 400);
-      
-      // Clear close account inputs
       inputCloseUsername.value = inputClosePin.value = '';
   }
 });
@@ -454,11 +429,7 @@ const showLoanError = (message) => {
 // Update loan button logic
 btnLoan.addEventListener('click', e => {
   e.preventDefault();
-  const currentAccount = accounts.find(
-      acct =>
-          acct.owner.split(' ')[0].toLowerCase().trim() ===
-          labelWelcome.textContent.split(',')[1].toLowerCase().trim()
-  );
+  const currentAccount = getCurrentAccount();
 
   const amount = Math.floor(+inputLoanAmount.value);
   const { multiplier, rating } = getCreditRating(currentAccount.creditScore);
@@ -529,19 +500,62 @@ const showLoanSuccess = (message) => {
   }, 2000);
 };
 
+// Add this at the top with other state variables
+let sortState = false;
+
+// Update the displayMovements function
+const displayMovements = (account, sort = false) => {
+  containerMovements.innerHTML = '';
+  
+  // Create array of movement objects with their dates
+  const movementsData = account.movements.map((mov, i) => ({
+      movement: mov,
+      date: account.movementsDates[i]
+  }));
+  
+  // Sort if requested
+  const movsToDisplay = sort 
+      ? [...movementsData].sort((a, b) => 
+          sortState ? b.movement - a.movement : a.movement - b.movement
+        )
+      : movementsData;
+
+  movsToDisplay.forEach((data, i) => {
+      const type = data.movement > 0 ? 'deposit' : 'withdrawal';
+      const date = new Date(data.date);
+      const displayDate = formatMovementDate(date);
+      
+      const html = `
+          <div class="movements__row">
+              <div class="movements__type movements__type--${type}">
+                  ${i + 1} ${type}
+              </div>
+              <div class="movements__date">${displayDate}</div>
+              <div class="movements__value" style="color: ${data.movement > 0 ? 'green' : 'red'}">
+                  ${data.movement > 0 ? '+' : ''}$${data.movement.toFixed(2)}
+              </div>
+          </div>
+      `;
+      
+      containerMovements.insertAdjacentHTML('afterbegin', html);
+  });
+};
+
 btnSort.addEventListener('click', e => {
   e.preventDefault();
-
-  const currentAccount = accounts.find(
-    acct =>
-      acct.owner.split(' ')[0].toLowerCase().trim() ===
-      labelWelcome.textContent.split(',')[1].toLowerCase().trim()
-  );
-
+  
+  const currentAccount = getCurrentAccount();
+  
   if (!currentAccount || !currentAccount.movements) return;
-  let sort = true;
-  displayMovements(currentAccount, sort);
-  sort = !sort;
+  
+  // Toggle sort state
+  sortState = !sortState;
+  
+  // Update sort button text
+  btnSort.innerHTML = sortState ? '↑ SORT' : '↓ SORT';
+  
+  // Display sorted movements
+  displayMovements(currentAccount, true);
 });
 
 // Separate function for handling successful signup
