@@ -56,3 +56,8 @@ This is a demo application and does not implement actual security measures. In a
 - Data encryption
 - Server-side validation
 - Secure API endpoints
+
+
+# Modern Banking Application
+
+Live Demo: [Bank App](https://abdocodesc.github.io/bank-app/)
