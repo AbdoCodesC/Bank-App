@@ -413,7 +413,7 @@ const showLoanError = (message) => {
   inputLoanAmount.type = 'text';
   inputLoanAmount.value = message;
   inputLoanAmount.style.color = 'red';
-  inputLoanAmount.style.width = '17rem';
+  inputLoanAmount.style.width = '20rem';
   
   // Reset after delay
   setTimeout(() => {
@@ -488,15 +488,19 @@ const showLoanSuccess = (message) => {
   btnLoan.style.color = 'green';
   const originalType = inputLoanAmount.type;
   
+  inputLoanAmount.style.transition = 'all 0.3s ease';
   inputLoanAmount.type = 'text';
   inputLoanAmount.value = message;
   inputLoanAmount.style.color = 'green';
+  inputLoanAmount.style.width = '20rem';
   
   setTimeout(() => {
-      btnLoan.style.color = 'black';
-      inputLoanAmount.type = originalType;
-      inputLoanAmount.value = '';
-      inputLoanAmount.style.color = 'black';
+    inputLoanAmount.style.transition = 'all 0.3s ease';
+    btnLoan.style.color = 'black';
+    inputLoanAmount.type = originalType;
+    inputLoanAmount.value = '';
+    inputLoanAmount.style.color = 'black';
+    inputLoanAmount.style.width = '12rem';
   }, 2000);
 };
 
