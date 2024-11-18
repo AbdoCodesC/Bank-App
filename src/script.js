@@ -469,18 +469,20 @@ btnLoan.addEventListener('click', e => {
       return;
   }
 
-  // Process approved loan
-  const now = new Date().toISOString();
-  currentAccount.movementsDates.push(now);
-  currentAccount.movements.push(amount);
-  loanAmount -= amount;
+  setTimeout(() => {
+      // Process approved loan
+    const now = new Date().toISOString();
+    currentAccount.movementsDates.push(now);
+    currentAccount.movements.push(amount);
+    loanAmount -= amount;
 
-  // Update UI
-  updateUI(currentAccount);
-  inputLoanAmount.value = '';
-  
-  // Show success in input
-  showLoanSuccess(`Loan approved: $${amount}`);
+    // Update UI
+    updateUI(currentAccount);
+    inputLoanAmount.value = '';
+    
+    // Show success in input
+    showLoanSuccess(`Loan approved: $${amount}`);
+  }, 2000)
 });
 
 // Add a success message handler
