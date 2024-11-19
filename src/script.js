@@ -225,7 +225,7 @@ const getCreditRating = (score) => {
 };
 
 const startLogoutTimer = () => {
-  let time = 300; // 5 minutes in seconds
+  let time = 10; // 5 minutes in seconds
   
   const tick = () => {
       const minutes = String(Math.floor(time / 60)).padStart(2, '0');
@@ -236,18 +236,19 @@ const startLogoutTimer = () => {
       
       // When time is up, log out user
       if (time === 0) {
-          clearInterval(timer);
-          containerApp.style.opacity = '0';
-          labelWelcome.textContent = 'Log in to get started';
-          btnLogin.innerHTML = '&rarr;';
-          btnLogin.classList.remove('logout__btn');
-          btnLogin.classList.add('login__btn');
-          inputLoginUsername.disabled = false;
-          inputLoginPin.disabled = false;
+        clearInterval(timer);
+        containerApp.style.opacity = '0';
+        labelWelcome.textContent = 'Log in to get started';
+        btnLogin.innerHTML = '&rarr;';
+        btnLogin.classList.remove('logout__btn');
+        btnLogin.classList.add('login__btn');
+        inputLoginUsername.disabled = false;
+        inputLoginPin.disabled = false;
       }
       
       time--;
   };
+  
   // Call immediately and then every second
   tick();
   const timer = setInterval(tick, 1000);
