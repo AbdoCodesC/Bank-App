@@ -51,12 +51,7 @@ Username: jd PIN: 2222 // Jessica Davis
 
 ## Security Note
 
-This is a demo application and does not implement actual security measures. In a production environment, proper security protocols should be implemented, including:
-- Secure password handling
-- Data encryption
-- Server-side validation
-- Secure API endpoints
-
+This is a demo application and does not implement actual security measures.
 
 # Modern Banking Application
 
