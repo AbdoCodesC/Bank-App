@@ -1,5 +1,7 @@
 'use strict';
 
+console.log('JS is connected');
+
 // Demo accounts
 const account1 = {
   owner: 'John Welguin',
