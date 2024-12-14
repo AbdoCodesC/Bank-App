@@ -84,27 +84,32 @@ const generateRandomMovements = () => {
   const numTransactions = Math.floor(Math.random() * 5) + 3; // 3-7 transactions
   const movements = [];
   const dates = [];
-  
+
   // Generate random dates within the last 3 months
   const now = new Date();
-  const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
-  
+  const threeMonthsAgo = new Date(
+    now.getFullYear(),
+    now.getMonth() - 3,
+    now.getDate()
+  );
+
   for (let i = 0; i < numTransactions; i++) {
-      // Random amount between -3000 and 5000
-      const amount = Math.floor(Math.random() * 8000) - 3000;
-      movements.push(amount);
-      
-      // Random date between now and 3 months ago
-      const randomDate = new Date(
-          threeMonthsAgo.getTime() + Math.random() * (now.getTime() - threeMonthsAgo.getTime())
-      );
-      dates.push(randomDate.toISOString());
+    // Random amount between -3000 and 5000
+    const amount = Math.floor(Math.random() * 8000) - 3000;
+    movements.push(amount);
+
+    // Random date between now and 3 months ago
+    const randomDate = new Date(
+      threeMonthsAgo.getTime() +
+        Math.random() * (now.getTime() - threeMonthsAgo.getTime())
+    );
+    dates.push(randomDate.toISOString());
   }
-  
+
   // Add initial deposit
   movements.push(1000);
   dates.push(new Date().toISOString());
-  
+
   return { movements, dates };
 };
 
@@ -141,8 +146,8 @@ const getCurrentAccount = () => {
 const displayBalance = account => {
   // Calculate balance with proper decimal handling
   account.balance = account.movements.reduce((acc, mov) => {
-      // Convert to number with 2 decimal places
-      return +(acc + mov).toFixed(2);
+    // Convert to number with 2 decimal places
+    return +(acc + mov).toFixed(2);
   }, 0);
 
   // Display with proper formatting
@@ -153,20 +158,20 @@ const displayBalance = account => {
 const calcDisplaySummary = account => {
   // Calculate income (deposits)
   const income = account.movements
-      .filter(mov => mov > 0)
-      .reduce((acc, mov) => +(acc + mov).toFixed(2), 0);
+    .filter(mov => mov > 0)
+    .reduce((acc, mov) => +(acc + mov).toFixed(2), 0);
 
   // Calculate outcome (withdrawals)
   const outcome = account.movements
-      .filter(mov => mov < 0)
-      .reduce((acc, mov) => +(acc + mov).toFixed(2), 0);
+    .filter(mov => mov < 0)
+    .reduce((acc, mov) => +(acc + mov).toFixed(2), 0);
 
   // Calculate interest
   const interest = account.movements
-      .filter(mov => mov > 0)
-      .map(deposit => +(deposit * (account.interestRate / 100)).toFixed(2))
-      .filter(int => int >= 1)
-      .reduce((acc, int) => +(acc + int).toFixed(2), 0);
+    .filter(mov => mov > 0)
+    .map(deposit => +(deposit * (account.interestRate / 100)).toFixed(2))
+    .filter(int => int >= 1)
+    .reduce((acc, int) => +(acc + int).toFixed(2), 0);
 
   // Display with proper formatting
   labelSumIn.textContent = `$${income.toFixed(2)}`;
@@ -183,9 +188,9 @@ const updateUI = currentAccount => {
 const formatMovementDate = function (date) {
   // Ensure date is a Date object
   const dateObj = new Date(date);
-  
+
   const calcDaysPassed = (date1, date2) =>
-      Math.abs(Math.round((date2 - date1) / (1000 * 60 * 60 * 24)));
+    Math.abs(Math.round((date2 - date1) / (1000 * 60 * 60 * 24)));
 
   const daysPassed = calcDaysPassed(dateObj, new Date());
 
@@ -194,12 +199,12 @@ const formatMovementDate = function (date) {
   const year = dateObj.getFullYear();
 
   return daysPassed === 0
-      ? 'Today'
-      : daysPassed === 1
-      ? 'Yesterday'
-      : daysPassed <= 7
-      ? `${daysPassed} days ago`
-      : `${month}/${day}/${year}`;
+    ? 'Today'
+    : daysPassed === 1
+    ? 'Yesterday'
+    : daysPassed <= 7
+    ? `${daysPassed} days ago`
+    : `${month}/${day}/${year}`;
 };
 
 const CREDIT_SCORE_RANGES = {
@@ -207,7 +212,7 @@ const CREDIT_SCORE_RANGES = {
   GOOD: { min: 700, max: 749, loanMultiplier: 4 },
   FAIR: { min: 650, max: 699, loanMultiplier: 3 },
   POOR: { min: 550, max: 649, loanMultiplier: 2 },
-  BAD: { min: 300, max: 549, loanMultiplier: 0 }
+  BAD: { min: 300, max: 549, loanMultiplier: 0 },
 };
 
 // Generate random credit score
@@ -216,43 +221,59 @@ const generateCreditScore = () => {
 };
 
 // Function to get credit rating and loan multiplier
-const getCreditRating = (score) => {
-  if (score >= CREDIT_SCORE_RANGES.EXCELLENT.min) return { rating: 'EXCELLENT', multiplier: CREDIT_SCORE_RANGES.EXCELLENT.loanMultiplier };
-  if (score >= CREDIT_SCORE_RANGES.GOOD.min) return { rating: 'GOOD', multiplier: CREDIT_SCORE_RANGES.GOOD.loanMultiplier };
-  if (score >= CREDIT_SCORE_RANGES.FAIR.min) return { rating: 'FAIR', multiplier: CREDIT_SCORE_RANGES.FAIR.loanMultiplier };
-  if (score >= CREDIT_SCORE_RANGES.POOR.min) return { rating: 'POOR', multiplier: CREDIT_SCORE_RANGES.POOR.loanMultiplier };
+const getCreditRating = score => {
+  if (score >= CREDIT_SCORE_RANGES.EXCELLENT.min)
+    return {
+      rating: 'EXCELLENT',
+      multiplier: CREDIT_SCORE_RANGES.EXCELLENT.loanMultiplier,
+    };
+  if (score >= CREDIT_SCORE_RANGES.GOOD.min)
+    return {
+      rating: 'GOOD',
+      multiplier: CREDIT_SCORE_RANGES.GOOD.loanMultiplier,
+    };
+  if (score >= CREDIT_SCORE_RANGES.FAIR.min)
+    return {
+      rating: 'FAIR',
+      multiplier: CREDIT_SCORE_RANGES.FAIR.loanMultiplier,
+    };
+  if (score >= CREDIT_SCORE_RANGES.POOR.min)
+    return {
+      rating: 'POOR',
+      multiplier: CREDIT_SCORE_RANGES.POOR.loanMultiplier,
+    };
   return { rating: 'BAD', multiplier: CREDIT_SCORE_RANGES.BAD.loanMultiplier };
 };
 
 const startLogoutTimer = () => {
-  let time = 10; // 5 minutes in seconds
-  
+  let time = 600; // 10 minutes in seconds
+
   const tick = () => {
-      const minutes = String(Math.floor(time / 60)).padStart(2, '0');
-      const seconds = String(time % 60).padStart(2, '0');
-      
-      // Display time in UI
-      labelTimer.textContent = `${minutes}:${seconds}`;
-      
-      // When time is up, log out user
-      if (time === 0) {
-        clearInterval(timer);
-        containerApp.style.opacity = '0';
-        labelWelcome.textContent = 'Log in to get started';
-        btnLogin.innerHTML = '&rarr;';
-        btnLogin.classList.remove('logout__btn');
-        btnLogin.classList.add('login__btn');
-        inputLoginUsername.disabled = false;
-        inputLoginPin.disabled = false;
-      }
-      
-      time--;
+    const minutes = String(Math.floor(time / 60)).padStart(2, '0');
+    const seconds = String(time % 60).padStart(2, '0');
+
+    // Display time in UI
+    labelTimer.textContent = `${minutes}:${seconds}`;
+
+    // When time is up, log out user
+    if (time === 0) {
+      clearInterval(timer);
+      containerApp.style.opacity = '0';
+      labelWelcome.textContent = 'Log in to get started';
+      btnLogin.innerHTML = '&rarr;';
+      btnLogin.classList.remove('logout__btn');
+      btnLogin.classList.add('login__btn');
+      inputLoginUsername.disabled = false;
+      inputLoginPin.disabled = false;
+    }
+
+    time--;
   };
-  
+
   // Call immediately and then every second
   tick();
   const timer = setInterval(tick, 1000);
-  
+
   return timer;
 };
 
@@ -294,10 +315,10 @@ btnLogin.addEventListener('click', e => {
       btnLogin.classList.remove('login__btn');
       inputLoginUsername.disabled = true;
       inputLoginPin.disabled = true;
-       // Clear existing timer if any
-       if (window.timer) clearInterval(window.timer);
-       // Start new timer
-       window.timer = startLogoutTimer();
+      // Clear existing timer if any
+      if (window.timer) clearInterval(window.timer);
+      // Start new timer
+      window.timer = startLogoutTimer();
     } else {
       btnLogin.style.color = 'red';
       setTimeout(() => {
@@ -311,8 +332,8 @@ btnLogin.addEventListener('click', e => {
 // Reset timer on relevant activity only
 const resetTimer = () => {
   if (window.timer && containerApp.style.opacity === '1') {
-      clearInterval(window.timer);
-      window.timer = startLogoutTimer();
+    clearInterval(window.timer);
+    window.timer = startLogoutTimer();
   }
 };
 
@@ -326,32 +347,32 @@ btnTransfer.addEventListener('click', e => {
   const currentAccount = getCurrentAccount();
 
   const accountReceiver = accounts.find(
-      acct => acct.username === inputTransferTo.value
+    acct => acct.username === inputTransferTo.value
   );
-  let amount = +(inputTransferAmount.value);
+  let amount = +inputTransferAmount.value;
 
   // Validation checks
   if (!accountReceiver || !amount || amount <= 0) {
-      btnTransfer.style.color = 'red';
-      setTimeout(() => (btnTransfer.style.color = 'black'), 400);
-      inputTransferTo.value = inputTransferAmount.value = '';
-      return;
+    btnTransfer.style.color = 'red';
+    setTimeout(() => (btnTransfer.style.color = 'black'), 400);
+    inputTransferTo.value = inputTransferAmount.value = '';
+    return;
   }
 
   // Check for self-transfer
   if (currentAccount.username === accountReceiver.username) {
-      btnTransfer.style.color = 'red';
-      setTimeout(() => (btnTransfer.style.color = 'black'), 400);
-      inputTransferTo.value = inputTransferAmount.value = '';
-      return;
+    btnTransfer.style.color = 'red';
+    setTimeout(() => (btnTransfer.style.color = 'black'), 400);
+    inputTransferTo.value = inputTransferAmount.value = '';
+    return;
   }
 
   // Check sufficient balance
   if (amount > currentAccount.balance) {
-      btnTransfer.style.color = 'red';
-      setTimeout(() => (btnTransfer.style.color = 'black'), 400);
-      inputTransferTo.value = inputTransferAmount.value = '';
-      return;
+    btnTransfer.style.color = 'red';
+    setTimeout(() => (btnTransfer.style.color = 'black'), 400);
+    inputTransferTo.value = inputTransferAmount.value = '';
+    return;
   }
 
   // Process transfer
@@ -360,7 +381,7 @@ btnTransfer.addEventListener('click', e => {
   accountReceiver.movementsDates.push(now);
   currentAccount.movements.push(-amount);
   accountReceiver.movements.push(amount);
-  
+
   // Update UI
   updateUI(currentAccount);
   inputTransferTo.value = inputTransferAmount.value = '';
@@ -368,54 +389,58 @@ btnTransfer.addEventListener('click', e => {
 
 btnClose.addEventListener('click', e => {
   e.preventDefault();
-  
+
   const currentAccount = getCurrentAccount();
   if (!currentAccount) return;
 
   if (
-      inputCloseUsername.value === currentAccount.username &&
-      +inputClosePin.value === currentAccount.pin
+    inputCloseUsername.value === currentAccount.username &&
+    +inputClosePin.value === currentAccount.pin
   ) {
-      const index = accounts.findIndex(
-          acc => acc.username === currentAccount.username
-      );
-      
-      // Delete account and cleanup
-      accounts.splice(index, 1);
-      containerApp.style.opacity = '0';
-      labelWelcome.textContent = 'Log in to get started';
-      if (window.timer) clearInterval(window.timer);
-      
-      // Reset all inputs and states
-      [inputCloseUsername, inputClosePin, inputLoginUsername, inputLoginPin]
-          .forEach(input => input.value = '');
-      
-      btnLogin.innerHTML = '&rarr;';
-      btnLogin.classList.remove('logout__btn');
-      btnLogin.classList.add('login__btn');
-      inputLoginUsername.disabled = false;
-      inputLoginPin.disabled = false;
+    const index = accounts.findIndex(
+      acc => acc.username === currentAccount.username
+    );
+
+    // Delete account and cleanup
+    accounts.splice(index, 1);
+    containerApp.style.opacity = '0';
+    labelWelcome.textContent = 'Log in to get started';
+    if (window.timer) clearInterval(window.timer);
+
+    // Reset all inputs and states
+    [
+      inputCloseUsername,
+      inputClosePin,
+      inputLoginUsername,
+      inputLoginPin,
+    ].forEach(input => (input.value = ''));
+
+    btnLogin.innerHTML = '&rarr;';
+    btnLogin.classList.remove('logout__btn');
+    btnLogin.classList.add('login__btn');
+    inputLoginUsername.disabled = false;
+    inputLoginPin.disabled = false;
   } else {
-      btnClose.style.color = 'red';
-      setTimeout(() => (btnClose.style.color = 'black'), 400);
-      inputCloseUsername.value = inputClosePin.value = '';
+    btnClose.style.color = 'red';
+    setTimeout(() => (btnClose.style.color = 'black'), 400);
+    inputCloseUsername.value = inputClosePin.value = '';
   }
 });
 
 let loanAmount = 100_000_000;
 
-const showLoanError = (message) => {
+const showLoanError = message => {
   btnLoan.style.color = 'red';
   // Store the original input type
   const originalType = inputLoanAmount.type;
-  
+
   // Temporarily change to text to show error
   inputLoanAmount.style.transition = 'all 0.3s ease';
   inputLoanAmount.type = 'text';
   inputLoanAmount.value = message;
   inputLoanAmount.style.color = 'red';
   inputLoanAmount.style.width = '20rem';
-  
+
   // Reset after delay
   setTimeout(() => {
     inputLoanAmount.style.transition = 'all 0.3s ease';
@@ -434,44 +459,44 @@ btnLoan.addEventListener('click', e => {
 
   const amount = Math.floor(+inputLoanAmount.value);
   const { multiplier, rating } = getCreditRating(currentAccount.creditScore);
-  
+
   // Calculate max loan based on positive balance only
   const maxLoanAmount = Math.max(currentAccount.balance, 0) * multiplier;
 
   // Validation checks with shorter messages
   if (!currentAccount || !amount || amount <= 0) {
-      showLoanError('Enter valid amount');
-      return;
+    showLoanError('Enter valid amount');
+    return;
   }
 
   if (rating === 'BAD') {
-      showLoanError('Credit score too low');
-      return;
+    showLoanError('Credit score too low');
+    return;
   }
 
   // If balance is negative or zero, deny loan
   if (currentAccount.balance <= 0) {
-      showLoanError('Balance must be positive');
-      return;
+    showLoanError('Balance must be positive');
+    return;
   }
 
   if (amount > maxLoanAmount) {
-      showLoanError(`Max loan: $${maxLoanAmount}`);
-      return;
+    showLoanError(`Max loan: $${maxLoanAmount}`);
+    return;
   }
 
   if (loanAmount <= 0) {
-      showLoanError('No loans available');
-      return;
+    showLoanError('No loans available');
+    return;
   }
 
   if (amount > loanAmount) {
-      showLoanError(`Max available: $${loanAmount}`);
-      return;
+    showLoanError(`Max available: $${loanAmount}`);
+    return;
   }
 
   setTimeout(() => {
-      // Process approved loan
+    // Process approved loan
     const now = new Date().toISOString();
     currentAccount.movementsDates.push(now);
     currentAccount.movements.push(amount);
@@ -480,23 +505,23 @@ btnLoan.addEventListener('click', e => {
     // Update UI
     updateUI(currentAccount);
     inputLoanAmount.value = '';
-    
+
     // Show success in input
     showLoanSuccess(`Loan approved: $${amount}`);
-  }, 2000)
+  }, 2000);
 });
 
 // Add a success message handler
-const showLoanSuccess = (message) => {
+const showLoanSuccess = message => {
   btnLoan.style.color = 'green';
   const originalType = inputLoanAmount.type;
-  
+
   inputLoanAmount.style.transition = 'all 0.3s ease';
   inputLoanAmount.type = 'text';
   inputLoanAmount.value = message;
   inputLoanAmount.style.color = 'green';
   inputLoanAmount.style.width = '20rem';
-  
+
   setTimeout(() => {
     inputLoanAmount.style.transition = 'all 0.3s ease';
     btnLoan.style.color = 'black';
@@ -513,54 +538,56 @@ let sortState = false;
 // Update the displayMovements function
 const displayMovements = (account, sort = false) => {
   containerMovements.innerHTML = '';
-  
+
   // Create array of movement objects with their dates
   const movementsData = account.movements.map((mov, i) => ({
-      movement: mov,
-      date: account.movementsDates[i]
+    movement: mov,
+    date: account.movementsDates[i],
   }));
-  
+
   // Sort if requested
-  const movsToDisplay = sort 
-      ? [...movementsData].sort((a, b) => 
-          sortState ? b.movement - a.movement : a.movement - b.movement
-        )
-      : movementsData;
+  const movsToDisplay = sort
+    ? [...movementsData].sort((a, b) =>
+        sortState ? b.movement - a.movement : a.movement - b.movement
+      )
+    : movementsData;
 
   movsToDisplay.forEach((data, i) => {
-      const type = data.movement > 0 ? 'deposit' : 'withdrawal';
-      const date = new Date(data.date);
-      const displayDate = formatMovementDate(date);
-      
-      const html = `
+    const type = data.movement > 0 ? 'deposit' : 'withdrawal';
+    const date = new Date(data.date);
+    const displayDate = formatMovementDate(date);
+
+    const html = `
           <div class="movements__row">
               <div class="movements__type movements__type--${type}">
                   ${i + 1} ${type}
               </div>
               <div class="movements__date">${displayDate}</div>
-              <div class="movements__value" style="color: ${data.movement > 0 ? 'green' : 'red'}">
+              <div class="movements__value" style="color: ${
+                data.movement > 0 ? 'green' : 'red'
+              }">
                   ${data.movement > 0 ? '+' : ''}$${data.movement.toFixed(2)}
               </div>
           </div>
       `;
-      
-      containerMovements.insertAdjacentHTML('afterbegin', html);
+
+    containerMovements.insertAdjacentHTML('afterbegin', html);
   });
 };
 
 btnSort.addEventListener('click', e => {
   e.preventDefault();
-  
+
   const currentAccount = getCurrentAccount();
-  
+
   if (!currentAccount || !currentAccount.movements) return;
-  
+
   // Toggle sort state
   sortState = !sortState;
-  
+
   // Update sort button text
   btnSort.innerHTML = sortState ? '↑ SORT' : '↓ SORT';
-  
+
   // Display sorted movements
   displayMovements(currentAccount, true);
 });
@@ -578,11 +605,11 @@ const handleSignupSuccess = newAccount => {
   // Auto-login
   const loginUsername = document.querySelector('.login__input--user');
   const loginPin = document.querySelector('.login__input--pin');
-  
+
   if (loginUsername && loginPin) {
-      loginUsername.value = newAccount.username;
-      loginPin.value = newAccount.pin;
-      btnLogin.click();
+    loginUsername.value = newAccount.username;
+    loginPin.value = newAccount.pin;
+    btnLogin.click();
   }
 };
 
@@ -590,7 +617,7 @@ signupForm.addEventListener('submit', e => {
   e.preventDefault();
 
   const fullName = signupName.value
-  .toLowerCase()
+    .toLowerCase()
     .split(' ')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
@@ -600,47 +627,56 @@ signupForm.addEventListener('submit', e => {
   if (!/^\d{4}$/.test(pin)) {
     alert('PIN must be exactly 4 digits');
     return;
-}
+  }
 
   // Generate username from initials
   const username = fullName
-      .toLowerCase()
-      .split(' ')
-      .map(name => name[0])
-      .join('');
+    .toLowerCase()
+    .split(' ')
+    .map(name => name[0])
+    .join('');
 
   // Check if username already exists
-  if (accounts.some(acc => acc.username === username && acc.owner === fullName && acc.pin === +pin)) {
-      alert('An account with similar initials already exists. Please use a different name.');
-      return;
+  if (
+    accounts.some(
+      acc =>
+        acc.username === username && acc.owner === fullName && acc.pin === +pin
+    )
+  ) {
+    alert(
+      'An account with similar initials already exists. Please use a different name.'
+    );
+    return;
   }
 
   // Generate random movements and dates
   const { movements, dates } = generateRandomMovements();
-  
+
   // Generate credit score
   const creditScore = generateCreditScore();
   const { rating } = getCreditRating(creditScore);
 
   // Create new account
   const newAccount = {
-      owner: fullName,
-      username: username,
-      movements: movements,
-      interestRate: 1.2,
-      pin: +pin,
-      movementsDates: dates,
-      currency: 'USD',
-      locale: 'en-US',
-      creditScore: creditScore,
-      creditRating: rating
+    owner: fullName,
+    username: username,
+    movements: movements,
+    interestRate: 1.2,
+    pin: +pin,
+    movementsDates: dates,
+    currency: 'USD',
+    locale: 'en-US',
+    creditScore: creditScore,
+    creditRating: rating,
   };
 
   // Add to accounts array
   accounts.push(newAccount);
 
   // Show credit score to user
-  alert(`Account created successfully!\nYour username is: ${username}\nYour credit score is: ${creditScore}\nCredit Rating: ${rating}`);
+  alert(
+    `Account created successfully!\nYour username is: ${username}\nYour credit score is: ${creditScore}\nCredit Rating: ${rating}`
+  );
 
   // Handle successful signup
   handleSignupSuccess(newAccount);
