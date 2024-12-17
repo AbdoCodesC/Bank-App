@@ -5,16 +5,19 @@ A minimalist online banking interface that allows users to manage their finances
 ## Features
 
 - **User Authentication**
+
   - Secure login system with username and PIN
   - Auto-logout timer for security
   - New account creation functionality
 
 - **Account Management**
+
   - Real-time balance tracking
   - Transaction history with dates
   - Detailed financial summary (deposits, withdrawals, interest)
 
 - **Banking Operations**
+
   - Money transfers between accounts
   - Loan requests
   - Account closure
@@ -27,6 +30,7 @@ A minimalist online banking interface that allows users to manage their finances
   - Date formatting for better readability
 
 ## Demo Accounts
+
 Username: jw PIN: 1111 // John Welguin
 Username: jd PIN: 2222 // Jessica Davis
 
@@ -55,4 +59,4 @@ This is a demo application and does not implement actual security measures.
 
 # Modern Banking Application
 
-Live Demo: [Bank App](https://abdocodesc.github.io/bank-app/)
+Live Demo: [Bank App](https://abdocodesc.github.io/Bank-App/)
