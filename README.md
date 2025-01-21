@@ -56,7 +56,3 @@ Username: jd PIN: 2222 // Jessica Davis
 ## Security Note
 
 This is a demo application and does not implement actual security measures.
-
-# Modern Banking Application
-
-Live Demo: [Bank App](https://abdocodesc.github.io/Bank-App/)
